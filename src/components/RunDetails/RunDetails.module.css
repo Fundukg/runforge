@@ -1,0 +1,99 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal {
+  background-color: var(--bg-card);
+  color: var(--text);
+  padding: 24px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+}
+.header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-h);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text);
+}
+.closeButton:hover {
+  color: var(--accent);
+}
+
+/* По умолчанию (для мобильных телефонов): 1 колонка */
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr; 
+  gap: 16px;
+  font-size: 14px;
+}
+@media (min-width: 600px) {
+ .infoGrid {
+    grid-template-columns: 1fr 1fr; 
+  }
+}
+.infoGrid p {
+  margin: 0;
+}
+.logsContainer {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  padding: 16px;
+  border-radius: 8px;
+  font-family: monospace;
+  overflow-x: auto;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.statusBadge {
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+.statusQueued {
+  background-color: var(--badge-queued-bg);
+  color: var(--badge-queued-text);
+}
+.statusRunning {
+  background-color: var(--badge-running-bg);
+  color: var(--badge-running-text);
+}
+.statusSucceeded {
+  background-color: var(--badge-success-bg);
+  color: var(--badge-success-text);
+}
+.statusFailed {
+  background-color: var(--badge-failed-bg);
+  color: var(--badge-failed-text);
+}

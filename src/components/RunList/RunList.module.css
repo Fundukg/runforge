@@ -1,0 +1,85 @@
+.list {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 600px) {
+  .list {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s ease;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.125rem;
+  color: var(--text-h);
+}
+.infoBlock {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.button {
+  margin-top: auto;
+  background-color: var(--accent);
+  color: var(--accent-text);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.button:hover {
+  background-color: var(--accent-hover);
+}
+
+.statusBadge {
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+/* Динамические статусы */
+.statusQueued {
+  background-color: var(--badge-queued-bg);
+  color: var(--badge-queued-text);
+}
+.statusRunning {
+  background-color: var(--badge-running-bg);
+  color: var(--badge-running-text);
+}
+.statusSucceeded {
+  background-color: var(--badge-success-bg);
+  color: var(--badge-success-text);
+}
+.statusFailed {
+  background-color: var(--badge-failed-bg);
+  color: var(--badge-failed-text);
+}

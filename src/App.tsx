@@ -1,122 +1,185 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import { fetchRuns } from "./api/runs";
+import type { Run, RunStatus } from "./types/types";
+import { Controls } from "./components/Controls";
+import { RunList } from "./components/RunList";
+import { Skeleton } from "./components/Skeleton";
+import "./App.css";
+import { ThemeToggle } from "./components/ThemeToggle/Index";
 
+const getInitialStatus = (): FilterStatus => {
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get("status");
+  const validStatuses = ["all", "queued", "running", "succeeded", "failed"];
+
+  // Если статус из URL валидный, возвращаем его. Иначе "all"
+  return validStatuses.includes(status as string)
+    ? (status as FilterStatus)
+    : "all";
+};
+
+const getInitialSearch = (): string => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("search") || "";
+};
+
+export type FilterStatus = RunStatus | "all";
+export type Sorted = "newest" | "oldest" | "longest" | "shortest";
 function App() {
-  const [count, setCount] = useState(0)
+  const [runs, setRuns] = useState<Run[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryTrigger, setRetryTrigger] = useState<number>(0);
+  const [isSorted, setIsSorted] = useState<Sorted>("newest");
+  const [statusFilter, setStatusFilter] =
+    useState<FilterStatus>(getInitialStatus);
+  const [searchQuery, setSearchQuery] = useState<string>(getInitialSearch);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const data = await fetchRuns();
+        if (isMounted) {
+          setRuns(data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          const errorMessage =
+            err instanceof Error ? err.message : "Unknown error";
+          setError(errorMessage);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [retryTrigger]);
+  useEffect(() => {
+    const url = new URL(window.location.href);
+
+    // Управляем параметром status
+    if (statusFilter === "all") {
+      url.searchParams.delete("status");
+    } else {
+      url.searchParams.set("status", statusFilter);
+    }
+
+    // Управляем параметром search (бонусом сохраняем и текстовый поиск)
+    if (searchQuery.trim() === "") {
+      url.searchParams.delete("search");
+    } else {
+      url.searchParams.set("search", searchQuery);
+    }
+
+    // history.replaceState меняет URL без перезагрузки страницы
+    window.history.replaceState({}, "", url.toString());
+  }, [statusFilter, searchQuery]);
+  const sortedRuns = structuredClone(runs);
+  switch (isSorted) {
+    case "newest":
+      sortedRuns.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+      break;
+    case "oldest":
+      sortedRuns.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+      break;
+    case "longest":
+      sortedRuns.sort((a, b) => {
+        if (a.durationSeconds === undefined) return 1;
+        if (b.durationSeconds === undefined) return -1;
+        return b.durationSeconds - a.durationSeconds;
+      });
+      break;
+    case "shortest":
+      sortedRuns.sort((a, b) => {
+        if (a.durationSeconds === undefined) return 1;
+        if (b.durationSeconds === undefined) return -1;
+        return a.durationSeconds - b.durationSeconds;
+      });
+      break;
+
+    default:
+      break;
+  }
+
+  const filteredRuns = sortedRuns.filter((run) => {
+    const matchesStatus =
+      statusFilter === "all" || run.status === statusFilter;
+    const matchesSearch =
+      run.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      run.repository.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesStatus && matchesSearch;
+  });
+
+  const handleRetry = () => {
+    setRetryTrigger((prev) => prev + 1);
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-container">
+      <header className="app-header">
+        <h1>Runforge</h1>
+        <ThemeToggle />
+      </header>
 
-      <div className="ticks"></div>
+      <Controls
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        isSorted={isSorted}
+        setIsSorted={setIsSorted}
+      />
+      <main>
+        {isLoading && <Skeleton />}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {error && !isLoading && (
+          <div className="state-container error-state">
+            <p>Произошла ошибка при загрузке данных: {error}</p>
+            <button className="primary-button" onClick={handleRetry}>
+              Повторить
+            </button>
+          </div>
+        )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {!isLoading && !error && filteredRuns.length === 0 && (
+          <div className="state-container empty-state">
+            <p>По вашему запросу ничего не найдено.</p>
+            <button className="primary-button" onClick={handleResetFilters}>
+              Сбросить фильтры
+            </button>
+          </div>
+        )}
+
+        {!isLoading && !error && filteredRuns.length > 0 && (
+          <RunList runs={filteredRuns} />
+        )}
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
