@@ -3,8 +3,8 @@
 Решение тестового задания на позицию Junior Frontend Developer. 
 Реализован интерфейс для просмотра, фильтрации и изучения логов запусков AI-агентов. Данные тянутся из локального мок-сервиса.
 
-**Демо:** [Ссылка на Vercel] *((https://runforge-red.vercel.app/))*
-**GitHub** [Ссылка на GitHub] *((https://github.com/Fundukg/runforge))*
+**Демо:** [Ссылка на Vercel](https://runforge-red.vercel.app/)  
+**GitHub:** [Исходный код проекта](https://github.com/Fundukg/runforge)
 
 ## Как запустить локально
 
